@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Drip7 Video</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      font-family: Arial, sans-serif;
+      color: #fff;
+    }
+
+    .shell {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    .header {
+      flex: 0 0 auto;
+      padding: 10px 14px;
+      background: #111;
+      border-bottom: 1px solid #222;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-wrap {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      background: #000;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .message {
+      padding: 24px;
+      text-align: center;
+      color: #d1d5db;
+      line-height: 1.5;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div id="header" class="header">Training clip</div>
+
+    <div id="playerWrap" class="player-wrap hidden">
+      <video id="player" controls playsinline></video>
+    </div>
+
+    <div id="message" class="message">
+      Loading video…
+    </div>
+  </div>
+
+  <script>
+    function getParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function setMessage(text) {
+      const message = document.getElementById("message");
+      message.textContent = text;
+      message.classList.remove("hidden");
+      document.getElementById("playerWrap").classList.add("hidden");
+    }
+
+    function showPlayer() {
+      document.getElementById("message").classList.add("hidden");
+      document.getElementById("playerWrap").classList.remove("hidden");
+    }
+
+    const src = getParam("src");
+    const title = getParam("title") || "Training clip";
+    const autoplay = getParam("autoplay") === "1";
+
+    document.title = title;
+    document.getElementById("header").textContent = title;
+
+    if (!src) {
+      setMessage("No video source was provided.");
+    } else {
+      const player = document.getElementById("player");
+      player.src = src;
+
+      player.addEventListener("loadedmetadata", () => {
+        showPlayer();
+      });
+
+      player.addEventListener("error", () => {
+        setMessage("The video could not be loaded in this Teams dialog.");
+      });
+
+      if (autoplay) {
+        player.setAttribute("autoplay", "autoplay");
+
+        player.addEventListener("canplay", async () => {
+          try {
+            await player.play();
+          } catch (err) {
+            // Autoplay is not guaranteed in every client/webview.
+            // Leave controls visible so the user can press play.
+            showPlayer();
+          }
+        }, { once: true });
+      }
+    }
+  </script>
+</body>
+</html>
