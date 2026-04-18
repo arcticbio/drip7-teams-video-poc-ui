@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Drip7 Video</title>
+  <!--<title></title>-->
   <!-- Microsoft Teams JS SDK (UMD build, global: microsoftTeams) -->
   <script
     src="https://res.cdn.office.net/teams-js/2.52.0/js/MicrosoftTeams.min.js"
@@ -115,10 +115,10 @@
       document.getElementById("playerWrap").classList.remove("hidden");
     }
     const src = getParam("src");
-    const title = getParam("title") || "Training clip";
+    //const title = getParam("title") || "Training clip";
     const autoplay = getParam("autoplay") === "1";
-    document.title = title;
-    document.getElementById("header").textContent = title;
+    //document.title = title;
+    //document.getElementById("header").textContent = title;
     if (!src) {
       setMessage("No video source was provided.");
     } else {
