@@ -4,11 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Drip7 Video</title>
+  <!-- Microsoft Teams JS SDK (UMD build, global: microsoftTeams) -->
+  <script
+    src="https://res.cdn.office.net/teams-js/2.52.0/js/MicrosoftTeams.min.js"
+    integrity="sha384-j4GNIru3mNYN+q8XdBRVyvbUx+0U867Cy90v6H61tpIZoR2pUq+bZDZmmpT8N7VG"
+    crossorigin="anonymous"></script>
   <style>
     :root {
       color-scheme: dark;
     }
-
     html, body {
       margin: 0;
       padding: 0;
@@ -18,7 +22,6 @@
       font-family: Arial, sans-serif;
       color: #fff;
     }
-
     .shell {
       display: flex;
       flex-direction: column;
@@ -26,7 +29,6 @@
       height: 100%;
       background: #000;
     }
-
     .header {
       flex: 0 0 auto;
       padding: 10px 14px;
@@ -38,7 +40,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .player-wrap {
       flex: 1 1 auto;
       display: flex;
@@ -47,21 +48,18 @@
       min-height: 0;
       background: #000;
     }
-
     video {
       width: 100%;
       height: 100%;
       object-fit: contain;
       background: #000;
     }
-
     .message {
       padding: 24px;
       text-align: center;
       color: #d1d5db;
       line-height: 1.5;
     }
-
     .hidden {
       display: none !important;
     }
@@ -70,58 +68,70 @@
 <body>
   <div class="shell">
     <div id="header" class="header">Training clip</div>
-
     <div id="playerWrap" class="player-wrap hidden">
       <video id="player" controls playsinline></video>
     </div>
-
     <div id="message" class="message">
       Loading video !!!!!!!…
     </div>
   </div>
-
   <script>
+    // --- Teams host handshake -------------------------------------------------
+    // Tell the Teams host this page is alive, so it suppresses the
+    // "This app may have issues in the web version of Teams" warning.
+    // Fires immediately, does not block video logic below, and is a no-op
+    // when the page is opened outside of a Teams host.
+    (function initTeamsHost() {
+      if (typeof microsoftTeams === "undefined" || !microsoftTeams.app) {
+        return; // SDK didn't load (CDN blocked, offline, etc.) — ignore.
+      }
+      try {
+        microsoftTeams.app.initialize()
+          .then(function () {
+            try { microsoftTeams.app.notifySuccess(); } catch (_) { /* optional */ }
+          })
+          .catch(function () {
+            // Not inside a Teams host, or handshake timed out.
+            // Page still works fine as a plain web page.
+          });
+      } catch (_) {
+        // Older/unexpected SDK shape — ignore.
+      }
+    })();
+    // -------------------------------------------------------------------------
+
     function getParam(name) {
       const params = new URLSearchParams(window.location.search);
       return params.get(name);
     }
-
     function setMessage(text) {
       const message = document.getElementById("message");
       message.textContent = text;
       message.classList.remove("hidden");
       document.getElementById("playerWrap").classList.add("hidden");
     }
-
     function showPlayer() {
       document.getElementById("message").classList.add("hidden");
       document.getElementById("playerWrap").classList.remove("hidden");
     }
-
     const src = getParam("src");
     const title = getParam("title") || "Training clip";
     const autoplay = getParam("autoplay") === "1";
-
     document.title = title;
     document.getElementById("header").textContent = title;
-
     if (!src) {
       setMessage("No video source was provided.");
     } else {
       const player = document.getElementById("player");
       player.src = src;
-
       player.addEventListener("loadedmetadata", () => {
         showPlayer();
       });
-
       player.addEventListener("error", () => {
         setMessage("The video could not be loaded in this Teams dialog.");
       });
-
       if (autoplay) {
         player.setAttribute("autoplay", "autoplay");
-
         player.addEventListener("canplay", async () => {
           try {
             await player.play();
